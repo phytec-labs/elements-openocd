@@ -26,6 +26,7 @@
 #define OPENOCD_JTAG_INTERFACE_H
 
 #include <jtag/jtag.h>
+#include <jtag/swim.h>
 #include <target/armv7m_trace.h>
 
 /* @file
@@ -272,7 +273,7 @@ struct adapter_driver {
 	int (*speed)(int speed);
 
 	/**
-	 * Returns JTAG maxium speed for KHz. 0 = RTCK. The function returns
+	 * Returns JTAG maximum speed for KHz. 0 = RTCK. The function returns
 	 *  a failure if it can't support the KHz/RTCK.
 	 *
 	 *  WARNING!!!! if RTCK is *slow* then think carefully about
@@ -359,6 +360,9 @@ struct adapter_driver {
 
 	/* DAP APIs over SWD transport */
 	const struct dap_ops *dap_swd_ops;
+
+	/* SWIM APIs */
+	const struct swim_driver *swim_ops;
 };
 
 extern const char * const jtag_only[];

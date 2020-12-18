@@ -43,7 +43,7 @@ struct flash_ctrl_priv_data {
 	char *part_name;
 };
 
-const struct flash_ctrl_priv_data flash_priv_data_1 = {
+static const struct flash_ctrl_priv_data flash_priv_data_1 = {
 	.die_id_reg = 0x4090001C,
 	.jtag_idcode_reg = 0x40900028,
 	.flash_base = 0x10040000,
@@ -53,7 +53,7 @@ const struct flash_ctrl_priv_data flash_priv_data_1 = {
 	.part_name = "BLUENRG-1",
 };
 
-const struct flash_ctrl_priv_data flash_priv_data_2 = {
+static const struct flash_ctrl_priv_data flash_priv_data_2 = {
 	.die_id_reg = 0x4090001C,
 	.jtag_idcode_reg = 0x40900028,
 	.flash_base = 0x10040000,
@@ -63,7 +63,7 @@ const struct flash_ctrl_priv_data flash_priv_data_2 = {
 	.part_name = "BLUENRG-2",
 };
 
-const struct flash_ctrl_priv_data flash_priv_data_lp = {
+static const struct flash_ctrl_priv_data flash_priv_data_lp = {
 	.die_id_reg = 0x40000000,
 	.jtag_idcode_reg = 0x40000004,
 	.flash_base = 0x10040000,
@@ -79,7 +79,11 @@ struct bluenrgx_flash_bank {
 	const struct flash_ctrl_priv_data *flash_ptr;
 };
 
-const struct flash_ctrl_priv_data *flash_ctrl[] = {&flash_priv_data_1, &flash_priv_data_2, &flash_priv_data_lp};
+static const struct flash_ctrl_priv_data *flash_ctrl[] = {
+	&flash_priv_data_1,
+	&flash_priv_data_2,
+	&flash_priv_data_lp
+};
 
 /* flash_bank bluenrg-x 0 0 0 0 <target#> */
 FLASH_BANK_COMMAND_HANDLER(bluenrgx_flash_bank_command)
@@ -123,12 +127,13 @@ static inline int bluenrgx_write_flash_reg(struct flash_bank *bank, uint32_t reg
 	return target_write_u32(bank->target, bluenrgx_get_flash_reg(bank, reg_offset), value);
 }
 
-static int bluenrgx_erase(struct flash_bank *bank, int first, int last)
+static int bluenrgx_erase(struct flash_bank *bank, unsigned int first,
+		unsigned int last)
 {
 	int retval = ERROR_OK;
 	struct bluenrgx_flash_bank *bluenrgx_info = bank->driver_priv;
-	int num_sectors = (last - first + 1);
-	int mass_erase = (num_sectors == bank->num_sectors);
+	unsigned int num_sectors = (last - first + 1);
+	const bool mass_erase = (num_sectors == bank->num_sectors);
 	struct target *target = bank->target;
 	uint32_t address, command;
 
@@ -181,9 +186,9 @@ static int bluenrgx_erase(struct flash_bank *bank, int first, int last)
 
 	} else {
 		command = FLASH_CMD_ERASE_PAGE;
-		for (int i = first; i <= last; i++) {
+		for (unsigned int i = first; i <= last; i++) {
 			address = bank->base+i*FLASH_PAGE_SIZE(bluenrgx_info);
-			LOG_DEBUG("address = %08x, index = %d", address, i);
+			LOG_DEBUG("address = %08" PRIx32 ", index = %u", address, i);
 
 			if (bluenrgx_write_flash_reg(bank, FLASH_REG_IRQRAW, 0x3f) != ERROR_OK) {
 				LOG_ERROR("Register write failed");
@@ -248,7 +253,7 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
 	if ((offset + count) > bank->size) {
-		LOG_ERROR("Requested write past beyond of flash size: (offset+count) = %d, size=%d",
+		LOG_ERROR("Requested write past beyond of flash size: (offset+count) = %" PRIu32 ", size=%" PRIu32,
 			  (offset + count),
 			  bank->size);
 		return ERROR_FLASH_DST_OUT_OF_BANK;
@@ -311,8 +316,8 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 	LOG_DEBUG("source->address = " TARGET_ADDR_FMT, source->address);
 	LOG_DEBUG("source->address+ source->size = " TARGET_ADDR_FMT, source->address+source->size);
 	LOG_DEBUG("write_algorithm_sp->address = " TARGET_ADDR_FMT, write_algorithm_sp->address);
-	LOG_DEBUG("address = %08x", address);
-	LOG_DEBUG("count = %08x", count);
+	LOG_DEBUG("address = %08" PRIx32, address);
+	LOG_DEBUG("count = %08" PRIx32, count);
 
 	retval = target_run_flash_async_algorithm(target,
 						  buffer,
@@ -399,7 +404,7 @@ static int bluenrgx_probe(struct flash_bank *bank)
 	bank->num_sectors = bank->size/FLASH_PAGE_SIZE(bluenrgx_info);
 	bank->sectors = realloc(bank->sectors, sizeof(struct flash_sector) * bank->num_sectors);
 
-	for (int i = 0; i < bank->num_sectors; i++) {
+	for (unsigned int i = 0; i < bank->num_sectors; i++) {
 		bank->sectors[i].offset = i * FLASH_PAGE_SIZE(bluenrgx_info);
 		bank->sectors[i].size = FLASH_PAGE_SIZE(bluenrgx_info);
 		bank->sectors[i].is_erased = -1;
