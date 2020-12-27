@@ -1,8 +1,8 @@
-name: Pull OpenOCD
+name: Rebase stable-rebased branch
 
 on:
-  schedule:
-  - cron: "0 0 * * *"
+  push:
+    branches: [ upstream ]
 
 jobs:
   build:
@@ -13,7 +13,7 @@ jobs:
         git clone -b ${{ env.branch }} git@github.com:phytec-labs/${{ env.repository_name }}.git ${{ env.repository_name }}
       env:
         repository_name: elements-openocd
-        branch: upstream
+        branch: stable-rebased
 
     - name: rebase to upstream
       run: |
@@ -43,7 +43,7 @@ jobs:
         cd ../
       env:
         repository_name: elements-openocd
-        branch: upstream
+        branch: stable-rebased
 
     - name: post cleanup
       if: always()
