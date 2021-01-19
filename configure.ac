@@ -25,7 +25,8 @@ AH_BOTTOM([
 
 AC_LANG([C])
 AC_PROG_CC
-AC_PROG_CC_C99
+# autoconf 2.70 obsoletes AC_PROG_CC_C99 and includes it in AC_PROG_CC
+m4_version_prereq([2.70],[],[AC_PROG_CC_C99])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 PKG_PROG_PKG_CONFIG([0.23])
@@ -80,7 +81,6 @@ AC_CHECK_HEADERS([arpa/inet.h ifaddrs.h netinet/in.h netinet/tcp.h net/if.h], []
 
 AC_HEADER_ASSERT
 AC_HEADER_STDBOOL
-AC_HEADER_TIME
 
 AC_C_BIGENDIAN
 
